@@ -206,14 +206,9 @@ function handleInteraction(event) {
     const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
     if (intersects.length > 0) {
-        if (intersects.length > 0) {
-            const object = intersects[0].object;
-            console.log('Clicked on:', object.userData.target);
-        }
-        else {
-            console.log('Nothing clicked');
-        }
-        
+        const object = intersects[0].object;
+        console.log('Clicked on:', object.userData.target);
+
         // Visual feedback
         intersects[0].object.scale.multiplyScalar(1.2);
         setTimeout(() => {
@@ -221,6 +216,9 @@ function handleInteraction(event) {
                 intersects[0].object.scale.divideScalar(1.2);
             }
         }, 200);
+    }
+    else {
+        console.log('Nothing clicked');
     }
 }
 // Handle window resize
