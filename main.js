@@ -158,6 +158,9 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.rotateSpeed = 0.5;
 
+controls.touchAction = 'none';
+controls.enableZoom = false;
+
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
