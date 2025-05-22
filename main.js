@@ -61,33 +61,6 @@ scene.add(hotspotsGroup);
 
 // Define panoramas with hotspots
 const hostpotRadius = 50;
-const panoramas = [
-    {
-        id: 1,
-        image: './mapa/1.jpg',
-        hotspots: [
-            { position: { u: 0.4, v: 0.35 }, target: 3 },
-            { position: { u: 0.5, v: 0.35 }, target: 2 }
-        ]
-    },
-    {
-        id: 2,
-        image: './mapa/2.jpg',
-        hotspots: [
-            { position: { u: 0.17, v: 0.4 }, target: 1 },
-            { position: { u: 0.35, v: 0.4 }, target: 3 }
-        ]
-    },    
-	{
-        id: 3,
-        image: './mapa/3.jpg',
-        hotspots: [
-            { position: { u: 0.1, v: 0.4 }, target: 1 },
-            { position: { u: 0.62, v: 0.4 }, target: 2}
-        ]
-    }
-    // Add more panoramas as needed
-];
 
 // Texture loader
 const textureLoader = new THREE.TextureLoader();
@@ -123,6 +96,11 @@ function computePosition(u, v) {
     return new THREE.Vector3(x, y, z);
 }
 
+const hotspots = [
+    { position: { u: 0.4, v: 0.4 }, target: 1 },
+    { position: { u: 0.5, v: 0.4 }, target: 2}
+];
+
 // Function to create hotspots
 function createHotspots(hotspots) {
     hotspotsGroup.remove(...hotspotsGroup.children);
@@ -142,46 +120,24 @@ function createHotspots(hotspots) {
     });
 }
 
-// Function to load a panorama by ID
-function loadPanorama(panoramaId) {
-    const panorama = panoramas.find(p => p.id === panoramaId);
-    if (!panorama) return;
+// Load new texture and update scene
+textureLoader.load('./mapa/1.jpg', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
 
-    // Remove existing hotspots
-    hotspotsGroup.remove(...hotspotsGroup.children);
-
-    // Load new texture and update scene
-    textureLoader.load(panorama.image, (texture) => {
-        texture.colorSpace = THREE.SRGBColorSpace;
-
-		if (renderer.capabilities.getMaxAnisotropy) {
-			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-		}
-		
-		// Filtering and mipmapping for high-res textures
-		texture.minFilter = THREE.LinearMipmapLinearFilter;
-		texture.magFilter = THREE.LinearFilter;
-		texture.generateMipmaps = true;
-		
-        cylinder.material.map = texture;
-        cylinder.material.needsUpdate = true;
-
-        createHotspots(panorama.hotspots);
-    });
-}
-
-// Function to extract panorama ID from URL path
-function getPanoramaIdFromUrl() {
-    // Get path segments (e.g., ["", "22"] for mysite.com/22)
-    const pathSegments = window.location.pathname.split('/');
+    if (renderer.capabilities.getMaxAnisotropy) {
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
     
-    // Get the last numeric segment that's a valid number
-    const numericSegments = pathSegments.filter(segment => !isNaN(segment) && segment !== '');
-    const lastNumericSegment = numericSegments[numericSegments.length - 1];
+    // Filtering and mipmapping for high-res textures
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
     
-    // Parse the ID or default to 1
-    return lastNumericSegment ? parseInt(lastNumericSegment, 10) : 1;
-}
+    cylinder.material.map = texture;
+    cylinder.material.needsUpdate = true;
+
+    createHotspots(hotspots);
+});
 
 // Track mouse position for hover effects
 const mouse = new THREE.Vector2();
@@ -250,13 +206,12 @@ function handleInteraction(event) {
     const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
     if (intersects.length > 0) {
-        const target = intersects[0].object.userData.target;
         if (intersects.length > 0) {
             const object = intersects[0].object;
-            console.log('Clicked on:', object.userData);
+            console.log('Clicked on:', object.userData.target);
         }
         
-        // Provide visual feedback (optional)
+        // Visual feedback
         intersects[0].object.scale.multiplyScalar(1.2);
         setTimeout(() => {
             if (intersects[0].object) {
@@ -280,6 +235,3 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('click', handleInteraction);
 window.addEventListener('touchend', handleInteraction);
-
-// Load panorama based on URL or default to 1
-loadPanorama(getPanoramaIdFromUrl());
