@@ -180,14 +180,11 @@ function handleInteraction(event) {
     let x, y;
     
     if (event.type.startsWith('touch')) {
-        // Touch event (mobile)
-        if (event.touches.length > 0) {
-            x = event.touches[0].clientX;
-            y = event.touches[0].clientY;
-        } else {
-            // If no touches are available (e.g., touchend)
-            return;
-        }
+        // Use changedTouches for touchend
+        const touch = event.changedTouches?.[0] || event.touches?.[0];
+        if (!touch) return;
+        x = touch.clientX;
+        y = touch.clientY;
     } else {
         // Mouse event (desktop)
         x = event.clientX;
@@ -238,4 +235,36 @@ window.addEventListener('mousemove', (event) => {
 });
 
 window.addEventListener('click', handleInteraction);
-window.addEventListener('touchend', handleInteraction);
+
+let isSwiping = false;
+let touchStartX = 0;
+let touchStartY = 0;
+const SWIPE_THRESHOLD = 10; // px
+
+renderer.domElement.style.touchAction = 'none'; // Prevent native gestures
+
+renderer.domElement.addEventListener('touchstart', (event) => {
+    if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        isSwiping = false;
+    }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchmove', (event) => {
+    const touch = event.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartX);
+    const dy = Math.abs(touch.clientY - touchStartY);
+    if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) {
+        isSwiping = true;
+    }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchend', (event) => {
+    if (!isSwiping) {
+        // It's a tap, not a swipe
+        handleInteraction(event);
+    }
+}, { passive: false });
+
