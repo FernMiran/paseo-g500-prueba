@@ -60,7 +60,7 @@ const hotspotsGroup = new THREE.Group();
 scene.add(hotspotsGroup);
 
 // Define panoramas with hotspots
-const hostpotRadius = radius - 10;
+const hostpotRadius = 50;
 const panoramas = [
     {
         id: 1,
@@ -92,30 +92,8 @@ const panoramas = [
 // Texture loader
 const textureLoader = new THREE.TextureLoader();
 
-// Load info icon texture
-const infoTexture = textureLoader.load('./info.svg');
-const infoSpriteMaterial = new THREE.SpriteMaterial({
-    map: infoTexture,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false
-});
-
 const iconTexture = textureLoader.load('./location.svg', (texture) => {
-    // FIX: Ensure texture is properly loaded with error handling
-    console.log('Hotspot icon loaded successfully');
-    
-    // Add custom CSS for the canvas to show pointer cursor on hover
-    const canvasStyle = document.createElement('style');
-    canvasStyle.innerHTML = `
-        canvas {
-            cursor: grab;
-        }
-        canvas:active {
-            cursor: grabbing;
-        }
-    `;
-    document.head.appendChild(canvasStyle);
+    console.log('Icon loaded successfully');
     
     // Once texture is loaded, create initial hotspots
     // loadPanorama(1);
@@ -131,25 +109,6 @@ const spriteMaterial = new THREE.SpriteMaterial({
     depthWrite: false, // Prevents depth buffer writes
     // sizeAttenuation: false // Maintains consistent size regardless of distance
 });
-
-// Animation parameters for hotspots
-const hotspotAnimations = {
-    baseSize: 30,
-
-    normalScale: new THREE.Vector2(40, 40),
-    hoverScale: new THREE.Vector2(90, 90),
-
-    pulseSpeed: 0.3,
-    pulseAmount: 0.05,
-
-    rotationSpeed: 0.02,
-    rotationAmount: 0.7,
-
-    normalColor: new THREE.Color(0xffffff),
-    hoverColor: new THREE.Color(0xC1C1C1),
-
-    lerpSpeed: 0.05
-};
 
 // Function to compute 3D position from UV coordinates for a cylinder
 function computePosition(u, v) {
@@ -173,8 +132,8 @@ function createHotspots(hotspots) {
         const sprite = new THREE.Sprite(spriteMaterial.clone());
         sprite.position.copy(position);
 
-        sprite.scale.copy(hotspotAnimations.normalScale);
-        sprite.material.color = hotspotAnimations.normalColor.clone();
+        sprite.scale.copy(new THREE.Vector2(50, 50));
+        sprite.material.color = new THREE.Color(0xffffff);
         
         sprite.userData = { 
             target: hotspot.target
@@ -193,8 +152,7 @@ function loadPanorama(panoramaId) {
 
     // Load new texture and update scene
     textureLoader.load(panorama.image, (texture) => {
-		// Apply anisotropic filtering for better quality at oblique angles
-        texture.colorSpace = THREE.SRGBColorSpace; // <<< Add this line
+        texture.colorSpace = THREE.SRGBColorSpace;
 
 		if (renderer.capabilities.getMaxAnisotropy) {
 			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -239,11 +197,6 @@ controls.maxPolarAngle = Math.PI * 0.50; // Restrict looking too far down
 controls.minAzimuthAngle = THREE.MathUtils.degToRad(-130);
 controls.maxAzimuthAngle = THREE.MathUtils.degToRad(130);
 
-// Zoom settings
-controls.enableZoom = true;
-controls.minDistance = 1;    // Prevent zooming too close to the center
-controls.maxDistance = 50;   // Prevent zooming too far out, keeping the view immersive
-
 controls.enablePan = false;
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
@@ -263,20 +216,6 @@ function animate() {
 }
 animate();
 
-// Handle window resize
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Update mouse position on move
-window.addEventListener('mousemove', (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-});
-
-// Create a function to handle both mouse clicks and touch events
 function handleInteraction(event) {
     // Prevent default behavior to avoid any unwanted navigation
     event.preventDefault();
@@ -311,7 +250,6 @@ function handleInteraction(event) {
     const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
     if (intersects.length > 0) {
-        // Get target panorama ID from the clicked hotspot
         const target = intersects[0].object.userData.target;
         if (intersects.length > 0) {
             const object = intersects[0].object;
@@ -327,6 +265,18 @@ function handleInteraction(event) {
         }, 200);
     }
 }
+// Handle window resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Update mouse position on move
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
 
 window.addEventListener('click', handleInteraction);
 window.addEventListener('touchend', handleInteraction);
