@@ -86,12 +86,12 @@ const spriteMaterial = new THREE.SpriteMaterial({
 // Function to compute 3D position from UV coordinates for a cylinder
 function computePosition(u, v) {
     const phi = (1 - u) * 2 * Math.PI; // Horizontal angle (0 to 2π)
-    const height = radius * 1.2; // Match cylinder height
+    const height = hostpotRadius * 1.2; // Match cylinder height
     
     // For cylindrical mapping
-    const x = radius * Math.sin(phi);
+    const x = hostpotRadius * Math.sin(phi);
     const y = height * (v - 0.5); // Map v from 0-1 to -height/2 to height/2
-    const z = radius * Math.cos(phi);
+    const z = hostpotRadius * Math.cos(phi);
     
     return new THREE.Vector3(x, y, z);
 }
@@ -106,7 +106,7 @@ function createHotspots(hotspots) {
     hotspotsGroup.remove(...hotspotsGroup.children);
     
     hotspots.forEach(hotspot => {
-        const position = computePosition(hotspot.position.u, hotspot.position.v, hostpotRadius);
+        const position = computePosition(hotspot.position.u, hotspot.position.v);
         const sprite = new THREE.Sprite(spriteMaterial.clone());
         sprite.position.copy(position);
 
@@ -142,26 +142,9 @@ textureLoader.load('./mapa/1.jpg', (texture) => {
 // Track mouse position for hover effects
 const mouse = new THREE.Vector2();
 
-// Set up OrbitControls
-const controls = new OrbitControls(camera, renderer.domElement);
-
-// Limit vertical rotation to avoid seeing the top/bottom edges
-controls.minPolarAngle = Math.PI * 0.50; // Restrict looking too far up
-controls.maxPolarAngle = Math.PI * 0.50; // Restrict looking too far down
-
-// Limit horizontal rotation to -45° to +45° (convert degrees to radians)
-controls.minAzimuthAngle = THREE.MathUtils.degToRad(-130);
-controls.maxAzimuthAngle = THREE.MathUtils.degToRad(130);
-
-controls.enablePan = false;
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.rotateSpeed = 0.5;
-
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
 
     // Make hotspots always face the camera
     hotspotsGroup.children.forEach(sprite => {
