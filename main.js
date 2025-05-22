@@ -158,9 +158,6 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.rotateSpeed = 0.5;
 
-controls.touchAction = 'none';
-controls.enableZoom = false;
-
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
@@ -193,7 +190,6 @@ function handleInteraction(event) {
         x = event.clientX;
         y = event.clientY;
     }
-    
     // Convert to normalized device coordinates (-1 to +1)
     const mouse = new THREE.Vector2();
     mouse.x = (x / window.innerWidth) * 2 - 1;
@@ -238,36 +234,5 @@ window.addEventListener('mousemove', (event) => {
 });
 
 window.addEventListener('click', handleInteraction);
-
-let isSwiping = false;
-let touchStartX = 0;
-let touchStartY = 0;
-const SWIPE_THRESHOLD = 10; // px
-
-renderer.domElement.style.touchAction = 'none'; // Prevent native gestures
-
-renderer.domElement.addEventListener('touchstart', (event) => {
-    if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        isSwiping = false;
-    }
-}, { passive: false });
-
-renderer.domElement.addEventListener('touchmove', (event) => {
-    const touch = event.touches[0];
-    const dx = Math.abs(touch.clientX - touchStartX);
-    const dy = Math.abs(touch.clientY - touchStartY);
-    if (dx > SWIPE_THRESHOLD || dy > SWIPE_THRESHOLD) {
-        isSwiping = true;
-    }
-}, { passive: false });
-
-renderer.domElement.addEventListener('touchend', (event) => {
-    if (!isSwiping) {
-        // It's a tap, not a swipe
-        handleInteraction(event);
-    }
-}, { passive: false });
+window.addEventListener('touchend', handleInteraction);
 
