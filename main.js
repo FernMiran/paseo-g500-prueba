@@ -110,7 +110,7 @@ function createHotspots(hotspots) {
         const sprite = new THREE.Sprite(spriteMaterial.clone());
         sprite.position.copy(position);
 
-        sprite.scale.copy(new THREE.Vector2(50, 50));
+        sprite.scale.copy(new THREE.Vector2(5, 5));
         sprite.material.color = new THREE.Color(0xffffff);
         
         sprite.userData = { 
