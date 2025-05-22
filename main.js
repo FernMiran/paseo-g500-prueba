@@ -56,10 +56,8 @@ scene.add(cylinder);
 
 // Create a group for hotspots and infospots
 const hotspotsGroup = new THREE.Group();
-const infospotsGroup = new THREE.Group();
 
 scene.add(hotspotsGroup);
-scene.add(infospotsGroup);
 
 // Define panoramas with hotspots
 const hostpotRadius = radius - 10;
@@ -67,47 +65,25 @@ const panoramas = [
     {
         id: 1,
         image: './mapa/1.jpg',
-        music: './audio/1.m4a',
         hotspots: [
             { position: { u: 0.4, v: 0.35 }, target: 3 },
-            { position: { u: 0.5, v: 0.35 }, target: 2 },
-        ],
-        infospots: [             
-            { 
-                position: { u: 0.3, v: 0.2 }, 
-                image: [ './mapa/1/1a.jpg' ],
-                title: 'Bienvenido al paseo virtual de la Básilica de Guadalupe', 
-                description: 'Para navegar por el recorrido, utiliza el mouse o el touchpad. Haz clic en los puntos de interés para obtener más información.'
-            }
+            { position: { u: 0.5, v: 0.35 }, target: 2 }
         ]
     },
     {
         id: 2,
         image: './mapa/2.jpg',
-        music: './audio/7.m4a', // './audio/14.m4a',
         hotspots: [
             { position: { u: 0.17, v: 0.4 }, target: 1 },
             { position: { u: 0.35, v: 0.4 }, target: 3 }
-
-        ],
-        infospots: [
-            { 
-                position: { u: 0.45, v: 0.4 }, 
-                image: [ './mapa/2/2a.jpg', './mapa/2/2b.jpg'],
-                title: '', 
-                description: ''
-            }
         ]
     },    
 	{
         id: 3,
         image: './mapa/3.jpg',
-        music: './audio/3.m4a',
         hotspots: [
             { position: { u: 0.1, v: 0.4 }, target: 1 },
             { position: { u: 0.62, v: 0.4 }, target: 2}
-        ],
-        infospots: [
         ]
     }
     // Add more panoramas as needed
@@ -186,34 +162,6 @@ function computePosition(u, v) {
     const z = radius * Math.cos(phi);
     
     return new THREE.Vector3(x, y, z);
-}
-
-function createInfospots(infospots) {
-    infospotsGroup.remove(...infospotsGroup.children);
-    
-    infospots.forEach(infospot => {
-        const position = computePosition(infospot.position.u, infospot.position.v, hostpotRadius);
-        const sprite = new THREE.Sprite(infoSpriteMaterial.clone()); // Clone material to avoid sharing
-        sprite.position.copy(position);
-
-        sprite.scale.copy(hotspotAnimations.normalScale);
-        // sprite.scale.set(50, 50, 1);
-        // sprite.material.color = new THREE.Color(0x00ff00); // Green tint
-        // Add visual feedback for debugging
-        sprite.material.color = hotspotAnimations.normalColor.clone();
-        
-        sprite.userData = {
-            type: 'infospot',
-            title: infospot.title,
-            description: infospot.description,
-            image: infospot.image,
-            
-            hovered: false,
-            pulsePhase: Math.random() * Math.PI * 2, // Random start phase for pulse animation
-            initialYRotation: Math.random() * Math.PI * 2 
-        };
-        infospotsGroup.add(sprite);
-    });
 }
 
 // Function to create hotspots
