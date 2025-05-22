@@ -210,6 +210,9 @@ function handleInteraction(event) {
             const object = intersects[0].object;
             console.log('Clicked on:', object.userData.target);
         }
+        else {
+            console.log('Nothing clicked');
+        }
         
         // Visual feedback
         intersects[0].object.scale.multiplyScalar(1.2);
