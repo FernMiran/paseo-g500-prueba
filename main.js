@@ -203,6 +203,9 @@ function handleInteraction(event) {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
+    // Set raycaster precision for sprites
+    raycaster.params.Sprite = { threshold: 100 };
+    
     const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
     if (intersects.length > 0) {
