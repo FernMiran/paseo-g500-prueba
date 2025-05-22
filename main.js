@@ -226,18 +226,10 @@ function createHotspots(hotspots) {
         sprite.position.copy(position);
 
         sprite.scale.copy(hotspotAnimations.normalScale);
-        // sprite.scale.set(50, 50, 1);
-        // sprite.material.color = new THREE.Color(0x00ff00); // Green tint
-        // Add visual feedback for debugging
         sprite.material.color = hotspotAnimations.normalColor.clone();
         
         sprite.userData = { 
-            target: hotspot.target, 
-            type: 'hotspot',
-
-            hovered: false,
-            pulsePhase: Math.random() * Math.PI * 2, // Random start phase for pulse animation
-            initialYRotation: Math.random() * Math.PI * 2  
+            target: hotspot.target
         };
         hotspotsGroup.add(sprite);
     });
@@ -250,7 +242,6 @@ function loadPanorama(panoramaId) {
 
     // Remove existing hotspots
     hotspotsGroup.remove(...hotspotsGroup.children);
-    infospotsGroup.remove(...infospotsGroup.children);
 
     // Load new texture and update scene
     textureLoader.load(panorama.image, (texture) => {
@@ -269,15 +260,7 @@ function loadPanorama(panoramaId) {
         cylinder.material.map = texture;
         cylinder.material.needsUpdate = true;
 
-		// Update audio when texture loads
-        if (panorama.music && window.changeAudio) {
-            console.log('calling audio change to', panorama.music);
-            window.changeAudio(panorama.music);
-        }
-
-        // Create new hotspots & infospots for this panorama
         createHotspots(panorama.hotspots);
-        createInfospots(panorama.infospots);
     });
 }
 
@@ -296,88 +279,9 @@ function getPanoramaIdFromUrl() {
 
 // Track mouse position for hover effects
 const mouse = new THREE.Vector2();
-let hoveredHotspot = null;
-
-// Hotspot & infospot hover effects
-function updateObjectHoverEffects() {
-    // Create raycaster from current mouse position
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-    
-    // Set raycaster precision for sprites
-    raycaster.params.Sprite = { threshold: 0.3 };
-    
-    // Check for intersections
-    const intersects = raycaster.intersectObjects([
-        ...hotspotsGroup.children, 
-        ...infospotsGroup.children
-    ]);
-
-    // Reset previous hover state if different hotspot or no hotspot is hovered
-    if (hoveredHotspot && (intersects.length === 0 || intersects[0].object !== hoveredHotspot)) {
-        hoveredHotspot.userData.hovered = false;
-        hoveredHotspot = null;
-        // Change cursor back to default
-        document.body.style.cursor = 'grab';
-    }
-    
-    // Set new hovered hotspot
-    if (intersects.length > 0) {
-        hoveredHotspot = intersects[0].object;
-        hoveredHotspot.userData.hovered = true;
-        // Change cursor to pointer to indicate clickable element
-        document.body.style.cursor = 'pointer';
-    }
-    
-    // Apply animations to all hotspots
-    const time = performance.now() * 0.001; // Current time in seconds
-    
-    // Update hotspots animations
-    hotspotsGroup.children.forEach(sprite => {
-        updateObjectAnimation(sprite, time, hotspotAnimations);
-    });
-    
-    // Update infospots animations
-    infospotsGroup.children.forEach(sprite => {
-        updateObjectAnimation(sprite, time, hotspotAnimations);
-    });
-}
-
-function updateObjectAnimation(object, time, animParams) {
-    // Make object always face the camera
-    // object.lookAt(camera.position);
-
-    if (object.userData.hovered) {
-        // Smooth transition to hover scale
-        object.scale.lerp(animParams.hoverScale, animParams.lerpSpeed);
-        
-        // Smooth color transition to hover color
-        object.material.color.lerp(animParams.hoverColor, animParams.lerpSpeed);
-        
-        // Subtle pulse effect when hovered
-        // const hoverPulse = 1 + Math.sin(time * animParams.pulseSpeed * 1.5) * (animParams.pulseAmount * 0.5);
-        // object.scale.multiplyScalar(hoverPulse);
-    } else {
-        // Base scale with subtle pulse
-        const baseScale = animParams.normalScale.clone();
-        const idlePulse = 1 + Math.sin(time * animParams.pulseSpeed + object.userData.pulsePhase) * animParams.pulseAmount;
-        baseScale.multiplyScalar(idlePulse);
-        
-        // Smooth transition back to normal scale
-        object.scale.lerp(baseScale, animParams.lerpSpeed);
-        
-        // Smooth color transition back to normal
-        object.material.color.lerp(animParams.normalColor, animParams.lerpSpeed);
-        
-        // Subtle rotation animation
-        object.rotation.z = Math.sin(time * animParams.rotationSpeed + object.userData.initialRotation) * animParams.rotationAmount;
-    }
-}
 
 // Set up OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
-const overlay = document.getElementById('overlay-label');
-const logo = document.getElementById('logo');
 
 // Limit vertical rotation to avoid seeing the top/bottom edges
 controls.minPolarAngle = Math.PI * 0.50; // Restrict looking too far up
@@ -402,29 +306,14 @@ function animate() {
     requestAnimationFrame(animate);
     controls.update();
 
-    // Update hotspot and infospot animations
-    updateObjectHoverEffects();
-    
     // Make hotspots always face the camera
     hotspotsGroup.children.forEach(sprite => {
         sprite.lookAt(camera.position);
     });    
-    
-    infospotsGroup.children.forEach(sprite => {
-        sprite.lookAt(camera.position);
-    });
 
     renderer.render(scene, camera);
 }
-// Create a clock for animation timing
-const clock = new THREE.Clock();
 animate();
-
-// when the user *starts* interacting…
-controls.addEventListener('start', () => {
-  overlay.classList.add('to-corner');
-//   logo.style.display = 'none';
-});
 
 // Handle window resize
 window.addEventListener('resize', () => {
@@ -444,12 +333,6 @@ function handleInteraction(event) {
     // Prevent default behavior to avoid any unwanted navigation
     event.preventDefault();
     
-	// Close modal
-	const modal = document.getElementById('info-modal');
-    if (modal && event.target === modal) {
-        modal.style.display = 'none';
-    }
-
     // Get the correct coordinates based on event type
     let x, y;
     
@@ -477,88 +360,16 @@ function handleInteraction(event) {
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects([
-        ...hotspotsGroup.children,
-        ...infospotsGroup.children
-    ]);
+    const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
     if (intersects.length > 0) {
         // Get target panorama ID from the clicked hotspot
         const target = intersects[0].object.userData.target;
         if (intersects.length > 0) {
             const object = intersects[0].object;
-            if (object.userData.type === 'hotspot') 
-            {
-                loadPanorama(object.userData.target);
-            } 
-            else if (object.userData.type === 'infospot') 
-            {
-                const modal = document.getElementById('info-modal');
-                const images = Array.isArray(object.userData.image) 
-                    ? object.userData.image 
-                    : [object.userData.image];
-                    
-                // Update modal content
-                modal.querySelector('#modal-title').textContent = object.userData.title;
-                modal.querySelector('#modal-description').textContent = object.userData.description;
-
-                // Handle image container
-                const container = modal.querySelector('#modal-image-container');
-                container.innerHTML = ''; // Clear previous content
-
-                if (images.length > 1) {
-                    // Generate carousel HTML
-                    container.innerHTML = `
-                        ${images.map((img, i) => `
-                        <img src="${img}" class="carousel-image ${i === 0 ? 'active' : ''}">
-                        `).join('')}
-                        <button class="carousel-prev">❮</button>
-                        <button class="carousel-next">❯</button>
-                        <div class="carousel-dots">
-                        ${images.map((_, i) => `
-                            <span class="dot ${i === 0 ? 'active' : ''}"></span>
-                        `).join('')}
-                        </div>
-                    `;
-
-                    // Carousel functionality
-                    let currentIndex = 0;
-                    const imagesEls = container.querySelectorAll('.carousel-image');
-                    const dots = container.querySelectorAll('.dot');
-
-                    const updateCarousel = (newIndex) => {
-                        imagesEls[currentIndex].classList.remove('active');
-                        dots[currentIndex].classList.remove('active');
-                        currentIndex = newIndex;
-                        imagesEls[currentIndex].classList.add('active');
-                        dots[currentIndex].classList.add('active');
-                    };
-
-                    // Navigation handlers
-                    container.querySelector('.carousel-prev').addEventListener('click', () => 
-                        updateCarousel((currentIndex - 1 + images.length) % images.length));
-                    
-                    container.querySelector('.carousel-next').addEventListener('click', () => 
-                        updateCarousel((currentIndex + 1) % images.length));
-
-                    dots.forEach((dot, index) => {
-                        dot.addEventListener('click', () => updateCarousel(index));
-                    });
-                } 
-                else 
-                {
-                    // Single image display
-                    const img = document.createElement('img');
-                    img.src = images[0];
-                    img.className = 'carousel-image active';
-                    container.appendChild(img);
-                }
-
-                modal.style.display = 'flex';
-
-                return; // Prevent modal from closing
-            }
+            console.log('Clicked on:', object.userData);
         }
+        
         // Provide visual feedback (optional)
         intersects[0].object.scale.multiplyScalar(1.2);
         setTimeout(() => {
@@ -571,8 +382,6 @@ function handleInteraction(event) {
 
 window.addEventListener('click', handleInteraction);
 window.addEventListener('touchend', handleInteraction);
-
-// Add click event listener for hotspots
 
 // Load panorama based on URL or default to 1
 loadPanorama(getPanoramaIdFromUrl());
