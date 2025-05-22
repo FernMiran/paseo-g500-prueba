@@ -60,7 +60,7 @@ const hotspotsGroup = new THREE.Group();
 scene.add(hotspotsGroup);
 
 // Define panoramas with hotspots
-const hostpotRadius = 50;
+const hostpotRadius = 40;
 
 // Texture loader
 const textureLoader = new THREE.TextureLoader();
@@ -80,7 +80,7 @@ const spriteMaterial = new THREE.SpriteMaterial({
     transparent: true,
     depthTest: false,  // Ensures sprite renders on top of other objects
     depthWrite: false, // Prevents depth buffer writes
-    // sizeAttenuation: false // Maintains consistent size regardless of distance
+    sizeAttenuation: true
 });
 
 // Function to compute 3D position from UV coordinates for a cylinder
@@ -110,7 +110,7 @@ function createHotspots(hotspots) {
         const sprite = new THREE.Sprite(spriteMaterial.clone());
         sprite.position.copy(position);
 
-        sprite.scale.copy(new THREE.Vector2(5, 5));
+        sprite.scale.copy(new THREE.Vector3(8, 8, 1));
         sprite.material.color = new THREE.Color(0xffffff);
         
         sprite.userData = { 
@@ -218,4 +218,3 @@ window.addEventListener('mousemove', (event) => {
 
 window.addEventListener('click', handleInteraction);
 window.addEventListener('touchend', handleInteraction);
-
