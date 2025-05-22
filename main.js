@@ -183,7 +183,7 @@ function handleInteraction(event) {
     raycaster.setFromCamera(mouse, camera);
 
     // Set raycaster precision for sprites
-    raycaster.params.Sprite = { threshold: 100 };
+    raycaster.params.Sprite = { threshold: 500 };
     
     const intersects = raycaster.intersectObjects(hotspotsGroup.children);
 
